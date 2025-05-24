@@ -16,17 +16,17 @@ def stream_users_in_batches(batch_size):
             cursor.execute(
                 "SELECT * FROM user_data ORDER BY user_id LIMIT %s OFFSET %s",
                 (batch_size, offset)
-            )
             batch = cursor.fetchall()
             if not batch:
-                break
+                cursor.close()
+                conn.close()
+                return  # Explicit return when done
             yield batch
             offset += batch_size
 
-        cursor.close()
-        conn.close()
     except mysql.connector.Error as err:
         print(f"Error: {err}")
+        return  
 
 def batch_processing(batch_size):
     """Process batches by filtering users with age > 25, yield filtered users."""
@@ -34,3 +34,4 @@ def batch_processing(batch_size):
         for user in batch:
             if user['age'] > 25:
                 yield user
+    return 
