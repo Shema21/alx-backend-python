@@ -91,16 +91,18 @@ class TestGithubOrgClient(unittest.TestCase):
         self.assertEqual(result, expected)
 
 
-@parameterized_class([{
-    "ORG_PAYLOAD": org_payload,
-    "REPOS_PAYLOAD": repos_payload,
-    "EXPECTED_REPOS": expected_repos,
-    "APACHE2_REPOS": apache2_repos,
-}])
+@parameterized_class([
+    {
+        "ORG_PAYLOAD": org_payload,
+        "REPOS_PAYLOAD": repos_payload,
+        "EXPECTED_REPOS": expected_repos,
+        "APACHE2_REPOS": apache2_repos,
+    }
+])
 class TestIntegrationGithubOrgClient(unittest.TestCase):
     """
-    Integration tests for GithubOrgClient using real-like API payloads (fixtures).
-    Only external calls to requests.get are mocked.
+    Integration tests for GithubOrgClient using fixture-based payloads.
+    Mocks external HTTP requests to simulate actual GitHub API responses.
     """
 
     @classmethod
@@ -112,7 +114,6 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
         cls.get_patcher = patch("requests.get")
         mock_get = cls.get_patcher.start()
 
-        # Define side_effect to return different mock JSON responses based on URL
         mock_get.side_effect = lambda url: Mock(json=lambda: (
             cls.ORG_PAYLOAD if url == "https://api.github.com/orgs/google" else
             cls.REPOS_PAYLOAD if url == "https://api.github.com/orgs/google/repos" else
