@@ -33,10 +33,6 @@ class TestAccessNestedMap(unittest.TestCase):
             access_nested_map(nested_map, path)
         self.assertEqual(str(context.exception), repr(path[len(context.exception.args[0]) - 1]))
 
-#!/usr/bin/env python3
-"""
-Unit tests for utils.py
-"""
 
 
 
@@ -63,7 +59,12 @@ class TestGetJson(unittest.TestCase):
 class TestMemoize(unittest.TestCase):
     """Test case for the memoize decorator"""
 
-    def test_memoize(self):
+    @patch.object(
+        # The class where the method lives:
+        # Because TestClass is defined inside the method, 
+        # it needs to be defined outside or patch dynamically.
+    )
+    def test_memoize(self, mock_method):
         """Test that a memoized method is only called once"""
 
         class TestClass:
@@ -74,12 +75,10 @@ class TestMemoize(unittest.TestCase):
             def a_property(self):
                 return self.a_method()
 
-        with patch.object(TestClass, 'a_method', return_value=42) as mock_method:
-            test_instance = TestClass()
-            result1 = test_instance.a_property
-            result2 = test_instance.a_property
+        test_instance = TestClass()
+        result1 = test_instance.a_property
+        result2 = test_instance.a_property
 
-            self.assertEqual(result1, 42)
-            self.assertEqual(result2, 42)
-            mock_method.assert_called_once()
-
+        self.assertEqual(result1, 42)
+        self.assertEqual(result2, 42)
+        mock_method.assert_called_once()
