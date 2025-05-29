@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """
-Unit tests for access_nested_map function in utils.py
+Unit tests for utils.py functions:
+- access_nested_map
+- get_json
+- memoize decorator
 """
 
 import unittest
 from parameterized import parameterized
-from utils import access_nested_map, get_json, memoize
-import unittest
 from unittest.mock import patch, Mock
-
+from utils import access_nested_map, get_json, memoize
 
 
 class TestAccessNestedMap(unittest.TestCase):
@@ -31,13 +32,9 @@ class TestAccessNestedMap(unittest.TestCase):
         """Test that access_nested_map raises KeyError with invalid path"""
         with self.assertRaises(KeyError) as context:
             access_nested_map(nested_map, path)
-        self.assertEqual(str(context.exception), repr(path[len(context.exception.args[0]) - 1]))
 
-#!/usr/bin/env python3
-"""
-Unit tests for utils.py
-"""
-
+        # context.exception.args[0] is the missing key causing KeyError
+        self.assertEqual(context.exception.args[0], path[len(context.exception.args[0]) - 1])
 
 
 class TestGetJson(unittest.TestCase):
@@ -56,8 +53,6 @@ class TestGetJson(unittest.TestCase):
             result = get_json(test_url)
             mock_get.assert_called_once_with(test_url)
             self.assertEqual(result, test_payload)
-
-
 
 
 class TestMemoize(unittest.TestCase):
@@ -83,3 +78,6 @@ class TestMemoize(unittest.TestCase):
             self.assertEqual(result2, 42)
             mock_method.assert_called_once()
 
+
+if __name__ == "__main__":
+    unittest.main()
