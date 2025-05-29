@@ -11,7 +11,6 @@ from unittest import TestCase
 from unittest.mock import patch, Mock
 from parameterized import parameterized_class
 from fixtures import org_payload, repos_payload, expected_repos, apache2_repos
-from utils import get_json
 
 
 
