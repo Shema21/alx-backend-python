@@ -9,6 +9,7 @@ Unit tests for utils.py functions:
 import unittest
 from parameterized import parameterized
 from unittest.mock import patch, Mock
+from client import GithubOrgClient
 from utils import access_nested_map, get_json, memoize
 
 
