@@ -35,24 +35,26 @@ class TestAccessNestedMap(unittest.TestCase):
         self.assertEqual(context.exception.args[0], path[-1])
 
 
-class TestGetJson(unittest.TestCase):
-    """Test cases for get_json function"""
+class TestGithubOrgClient(unittest.TestCase):
+    """Unit tests for GithubOrgClient.org method"""
 
     @parameterized.expand([
-        ("http://example.com", {"payload": True}),
-        ("http://holberton.io", {"payload": False}),
+        ("google",),
+        ("abc",)
     ])
-    def test_get_json(self, test_url, test_payload):
-        """Test get_json returns expected JSON payload"""
-        mock_response = Mock()
-        mock_response.json.return_value = test_payload
+    @patch("client.get_json")
+    def test_org(self, org_name, mock_get_json):
+        """Test that GithubOrgClient.org returns correct value"""
+        expected_result = {"login": org_name, "id": 12345}
+        mock_get_json.return_value = expected_result
 
-        with patch(
-            "utils.requests.get", return_value=mock_response
-        ) as mock_get:
-            result = get_json(test_url)
-            mock_get.assert_called_once_with(test_url)
-            self.assertEqual(result, test_payload)
+        client = GithubOrgClient(org_name)
+        result = client.org
+
+        self.assertEqual(result, expected_result)
+        mock_get_json.assert_called_once_with(
+            f"https://api.github.com/orgs/{org_name}"
+        )
 
 
 class TestMemoize(unittest.TestCase):
