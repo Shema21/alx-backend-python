@@ -57,8 +57,8 @@ class TestGithubOrgClient(unittest.TestCase):
             mock_get_json (Mock): Mock for get_json returning a list of repos.
         """
         test_repos = [
-            {"name": "repo1"},
-            {"name": "repo2"},
+            {"name": "repo1", "license": {"key": "mit"}},
+            {"name": "repo2", "license": {"key": "apache-2.0"}},
             {"name": "repo3"},
         ]
         mock_get_json.return_value = test_repos
@@ -72,6 +72,34 @@ class TestGithubOrgClient(unittest.TestCase):
             self.assertEqual(result, ["repo1", "repo2", "repo3"])
             mock_get_json.assert_called_once_with("https://api.github.com/orgs/testorg/repos")
             mock_url.assert_called_once()
+
+    @patch("client.get_json")
+    def test_public_repos_with_license(self, mock_get_json):
+        """
+        Test that public_repos with license argument returns only repos with that license.
+        """
+        test_repos = [
+            {"name": "repo1", "license": {"key": "mit"}},
+            {"name": "repo2", "license": {"key": "apache-2.0"}},
+            {"name": "repo3"},
+        ]
+        mock_get_json.return_value = test_repos
+
+        with patch("client.GithubOrgClient._public_repos_url", new_callable=PropertyMock) as mock_url:
+            mock_url.return_value = "https://api.github.com/orgs/testorg/repos"
+
+            client = GithubOrgClient("testorg")
+            # Test with apache-2.0 license filter
+            result = client.public_repos(license="apache-2.0")
+            self.assertEqual(result, ["repo2"])
+            
+            # Test with mit license filter
+            result = client.public_repos(license="mit")
+            self.assertEqual(result, ["repo1"])
+            
+            # Test with no license filter
+            result = client.public_repos()
+            self.assertEqual(result, ["repo1", "repo2", "repo3"])
 
     @parameterized.expand([
         ({"license": {"key": "my_license"}}, "my_license", True),
