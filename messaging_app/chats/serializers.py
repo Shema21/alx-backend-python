@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from .models import CustomUser, Conversation, Message
-from rest_framework.exceptions import ValidationError
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -35,6 +34,6 @@ class ConversationSerializer(serializers.ModelSerializer):
         return MessageSerializer(messages, many=True).data
 
     def validate(self, data):
-        if not data.get('participants'):
-            raise ValidationError("A conversation must have at least one participant.")
+        if not data.get('title') and not data.get('is_group'):
+            raise serializers.ValidationError("Group conversations must have a title.")
         return data
