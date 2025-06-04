@@ -4,7 +4,7 @@ from django.db import models
 
 
 class CustomUser(AbstractUser):
-    user_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    user_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
     username = models.CharField(max_length=150, unique=True)
     email = models.EmailField(unique=True)
     first_name = models.CharField(max_length=30, blank=True)
