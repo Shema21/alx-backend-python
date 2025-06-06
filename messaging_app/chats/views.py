@@ -5,7 +5,7 @@ from .serializers import ConversationSerializer, MessageSerializer
 from .permissions import IsParticipantOfConversation
 from django_filters.rest_framework import DjangoFilterBackend
 from .pagination import MessagePagination
-from .filters import MessageFilter
+from messaging_app.filters import MessageFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.status import HTTP_403_FORBIDDEN
