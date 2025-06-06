@@ -8,6 +8,7 @@ from .pagination import MessagePagination
 from .filters import MessageFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.status import HTTP_403_FORBIDDEN
 
 
 class ConversationViewSet(viewsets.ModelViewSet):
@@ -53,9 +54,11 @@ class MessageViewSet(viewsets.ModelViewSet):
                 conversation = Conversation.objects.get(id=conversation_id)
                 if self.request.user not in conversation.participants.all():
                     raise PermissionDenied("You are not a participant of this conversation.")
+                    status=HTTP_403_FORBIDDEN
                 queryset = queryset.filter(conversation=conversation)
             except Conversation.DoesNotExist:
                 raise PermissionDenied("Conversation not found or access denied.")
+                status=HTTP_403_FORBIDDEN
 
         return queryset
 
