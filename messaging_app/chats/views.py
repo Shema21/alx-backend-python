@@ -6,6 +6,8 @@ from .permissions import IsParticipantOfConversation
 from django_filters.rest_framework import DjangoFilterBackend
 from .pagination import MessagePagination
 from .filters import MessageFilter
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import PermissionDenied
 
 
 class ConversationViewSet(viewsets.ModelViewSet):
@@ -31,25 +33,29 @@ class ConversationViewSet(viewsets.ModelViewSet):
 
 
 
+
+
 class MessageViewSet(viewsets.ModelViewSet):
     serializer_class = MessageSerializer
-    permission_classes = [IsParticipantOfConversation]
+    permission_classes = [IsAuthenticated, IsParticipantOfConversation]
     pagination_class = MessagePagination
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_class = MessageFilter
-    ordering_fields = ['sent_at']  # fixed field name from 'timestamp' to your actual model's 'sent_at'
+    ordering_fields = ['sent_at']
 
     def get_queryset(self):
-        # Only return messages in conversations the user participates in
-        return Message.objects.filter(conversation__participants=self.request.user)
+        queryset = Message.objects.filter(conversation__participants=self.request.user)
 
-    def perform_create(self, serializer):
-        serializer.save(sender=self.request.user)
+        # Support ?conversation_id=xyz
+        conversation_id = self.request.query_params.get('conversation_id')
+        if conversation_id:
+            try:
+                conversation = Conversation.objects.get(id=conversation_id)
+                if self.request.user not in conversation.participants.all():
+                    raise PermissionDenied("You are not a participant of this conversation.")
+                queryset = queryset.filter(conversation=conversation)
+            except Conversation.DoesNotExist:
+                raise PermissionDenied("Conversation not found or access denied.")
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            self.perform_create(serializer)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return queryset
 
