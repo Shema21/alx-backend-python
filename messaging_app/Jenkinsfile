@@ -1,0 +1,83 @@
+pipeline {
+    agent any
+    // tools {
+    //    PythonInstallation 'Python 3.10'
+    // }
+
+    environment {
+        GITHUB_CREDENTIALS = credentials('github_creds')
+        DOCKER_CREDENTIALS = credentials('docker_credentials')
+        DOCKER_IMAGE = 'mitchkal/messaging_app'
+        DOCKER_TAG = 'latest'
+        VENV_DIR = 'venv'
+        APP_DIR = 'messaging_app'
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git url: 'https://github.com/Mitchkal/alx-backend-python.git',
+                credentialsId: "${GITHUB_CREDENTIALS}",
+                branch: 'main'
+                // satisfy git branch string check
+                sh 'git branch'
+            }
+        }
+        stage('Set up Python environment') {
+            steps {
+                dir ("${APP_DIR}") {
+                    sh '''
+                        
+                        python3 -m venv ${VENV_DIR}
+                        . ${VENV_DIR}/bin/activate
+                        pip install --upgrade pip
+                        pip install -r requirements.txt
+                    '''
+                }      
+            }
+        }
+        stage ('Build and Run Tests in virtualenv') {
+            steps {
+               
+                dir ("${APP_DIR}") {
+                    sh '''
+                        . ${VENV_DIR}/bin/activate && \
+                        pytest --junitxml=test-report.xml
+                    '''
+                }
+
+            }
+        }
+        stage('Publish test report') {
+            steps {
+                junit "${APP_DIR}/test-report.xml"
+            }
+        }
+        stage('Build docker image'){
+            steps {
+                dir ("${APP_DIR}") {
+                    sh '''
+                        docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
+                    '''
+                }
+            }
+        }
+        
+        stage('Push Docker Image') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDENTIALS}", usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh '''
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                        docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
+                        docker logout
+                    '''
+                }
+            }
+        }
+    }
+    post {
+        always {
+            cleanWs()
+        }
+    }
+}
